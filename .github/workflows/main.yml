@@ -1,0 +1,31 @@
+name: Automated Renpho Garmin Sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Wakes up automatically every 6 hours
+  workflow_dispatch:     # Adds the manual "Run" button to your screen
+
+jobs:
+  sync-metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Download Latest Release Tool
+        run: |
+          curl -s https://github.com \
+          | grep "browser_download_url.*linux-x64" \
+          | cut -d : -f 2,3 \
+          | tr -d \" \
+          | wget -qi -
+          chmod +x rgs
+
+      - name: Run Cloud Synchronization
+        run: |
+          ./rgs sync --gu "${{ secrets.GARMIN_EMAIL }}" --gpw "${{ secrets.GARMIN_PASSWORD }}" --ru "${{ secrets.GARMIN_EMAIL }}" --rpw "${{ secrets.RENPHO_PASSWORD }}"
