@@ -22,7 +22,6 @@ jobs:
           pip install requests
           pip install garminconnect
 
-      - name: Download and Run Sync Script
+      - name: Run Cloud Synchronization
         run: |
-          wget https://githubusercontent.com
-          python renpho_to_garmin.py --renpho-email "${{ secrets.RENPHO_EMAIL }}" --renpho-password "${{ secrets.RENPHO_PASSWORD }}" --garmin-email "${{ secrets.GARMIN_EMAIL }}" --garmin-password "${{ secrets.GARMIN_PASSWORD }}"
+          python sync_script.py --renpho-email "${{ secrets.RENPHO_EMAIL }}" --renpho-password "${{ secrets.RENPHO_PASSWORD }}" --garmin-email "${{ secrets.GARMIN_EMAIL }}" --garmin-password "${{ secrets.GARMIN_PASSWORD }}"
