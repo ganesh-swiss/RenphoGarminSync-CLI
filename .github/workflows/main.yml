@@ -1,4 +1,4 @@
-name: Automated Renpho Garmin Sync
+name: Automated Renpho Garmin Sync Python
 
 on:
   schedule:
