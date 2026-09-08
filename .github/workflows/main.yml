@@ -1,9 +1,9 @@
-name: Automated Renpho Garmin Sync Python
+name: Automated Renpho Garmin Sync
 
 on:
   schedule:
     - cron: '0 */6 * * *' # Wakes up automatically every 6 hours
-  workflow_dispatch:     # Keeps your manual sync button active
+  workflow_dispatch:     # Keeps your manual run button active
 
 jobs:
   sync-metrics:
