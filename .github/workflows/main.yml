@@ -3,7 +3,7 @@ name: Automated Renpho Garmin Sync
 on:
   schedule:
     - cron: '0 */6 * * *' # Wakes up automatically every 6 hours
-  workflow_dispatch:     # Adds the manual "Run" button to your screen
+  workflow_dispatch:     # Adds the manual manual run button
 
 jobs:
   sync-metrics:
@@ -28,4 +28,4 @@ jobs:
 
       - name: Run Cloud Synchronization
         run: |
-          ./rgs sync --gu "${{ secrets.GARMIN_EMAIL }}" --gpw "${{ secrets.GARMIN_PASSWORD }}" --ru "${{ secrets.GARMIN_EMAIL }}" --rpw "${{ secrets.RENPHO_PASSWORD }}"
+          ./rgs sync --gu "${{ secrets.GARMIN_EMAIL }}" --gpw "${{ secrets.GARMIN_PASSWORD }}" --ru "${{ secrets.RENPHO_EMAIL }}" --rpw "${{ secrets.RENPHO_PASSWORD }}"
