@@ -14,7 +14,7 @@ def main():
 
     print("Connecting to Renpho Cloud...")
     # Authentication header handling
-    login_url = "https://renpho.com"
+    login_url = "https://cloud.renpho.com/api/v3/users/sign_in.json"
     payload = {"user": {"email": args.renpho_email, "password": args.renpho_password}}
     headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
     
