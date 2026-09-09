@@ -25,7 +25,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements[0]
+        weight_info = measurements
         
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
@@ -50,14 +50,15 @@ def main():
             print(f"Warning: Could not write token file: {token_err}")
 
     try:
-        # 👇 FIXED: Changed verify_login=False to is_login_verified=False 
-        # This matches the exact parameter label expected by the garminconnect library.
+        # 👇 FIXED: Removed the rejected keyword completely.
+        # We just supply the email and password to initialize the setup safely.
         garmin = Garmin(
             email=args.garmin_email, 
-            password=args.garmin_password, 
-            is_login_verified=False
+            password=args.garmin_password
         )
         
+        # 👇 This is where the magic happens: passing the directory here 
+        # forces the tool to use your pre-validated keycard immediately.
         print(f"Authenticating via active session folder...")
         garmin.login(token_dir)
         
