@@ -22,6 +22,13 @@ jobs:
           pip install requests
           pip install garminconnect
 
+          - name: Validate Secrets
+  run: |
+    if [ -z "${{ secrets.RENPHO_EMAIL }}" ] || [ -z "${{ secrets.RENPHO_PASSWORD }}" ]; then
+      echo "Error: RENPHO_EMAIL or RENPHO_PASSWORD secrets are not configured"
+      exit 1
+    fi
+
       - name: Run Cloud Synchronization
         run: |
           python sync_script.py --renpho-email "${{ secrets.RENPHO_EMAIL }}" --renpho-password "${{ secrets.RENPHO_PASSWORD }}" --garmin-email "${{ secrets.GARMIN_EMAIL }}" --garmin-password "${{ secrets.GARMIN_PASSWORD }}"
