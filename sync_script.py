@@ -26,25 +26,31 @@ def main():
     auth_token = response.json().get("terminal_user", {}).get("session_key")
     user_id = response.json().get("terminal_user", {}).get("id")
     
-    # Fetch data timeline
-    # 👇 FIX 1: Point to the modern measurements file path
-    data_url = f"https://renpho.com"
+  # Fetch data timeline
+    # 👇 FIX 1: Point to the legacy open endpoint that doesn't use AES encryption
+    data_url = f"http://qnclouds.com{user_id}/growth_records.json"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "Renpho/2.0.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
-    # 👇 FIX 2: Safely extract data from the modern folder name
+    # 👇 FIX 2: Check for a successful server connection before decoding
+    if metrics_resp.status_code != 200:
+        print(f"Error: Failed to fetch weight data. Server code: {metrics_resp.status_code}")
+        sys.exit(1)
+        
     metrics_json = metrics_resp.json()
-    records = metrics_json.get("body_composition_measurements", [])
+    
+    # 👇 FIX 3: Check both old and new data folders safely
+    records = metrics_json.get("growth_records", metrics_json.get("body_composition_measurements", []))
     
     if not records:
-        print("Error: No weight data found in your Renpho Cloud profile.")
+        print("Error: Successfully connected, but zero weight logs were returned.")
         sys.exit(1)
         
     latest_record = records[0]
     
-    # 👇 FIX 3: Pull the exact metric labels used by the scale database
+    # 👇 FIX 4: Securely parse metric values
     weight_kg = float(latest_record.get("weight"))
-    body_fat_pct = float(latest_record.get("body_fat_ratio", latest_record.get("body_fat_percentage", 0)))
+    body_fat_pct = float(latest_record.get("body_fat_percentage", latest_record.get("body_fat_ratio", 0)))
     bmi = float(latest_record.get("bmi"))
     
     print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
