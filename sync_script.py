@@ -3,8 +3,7 @@ import argparse
 import os
 import warnings
 
-# 👇 FIXED: Silences the 'Garth is deprecated' warning text entirely 
-# so it won't interfere with your incoming data pipeline.
+# Silences the 'Garth is deprecated' warning text entirely
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from datetime import datetime
@@ -29,8 +28,6 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        # 👇 FIXED: Unpacks the modern list container safely 
-        # to ensure Python reads your metrics dictionary properly.
         if isinstance(measurements, list):
             weight_info = measurements[0]
         else:
@@ -55,13 +52,15 @@ def main():
         sys.exit(1)
 
     try:
-        # Pass the token directory right into initialization to bypass Cloudflare web panels
+        # 👇 FIXED: Changed tokenstore=token_dir to token_dir=token_dir 
+        # to match the exact configuration requirements of the stable library build.
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password,
-            tokenstore=token_dir
+            token_dir=token_dir
         )
         
+        # Log in via the local keycard directory to slide past Cloudflare
         garmin.login()
         
         today_str = datetime.now().strftime("%Y-%m-%d")
