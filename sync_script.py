@@ -1,7 +1,6 @@
 import sys
 import argparse
 import os
-import json
 from datetime import datetime
 from renpho import RenphoClient
 from garminconnect import Garmin
@@ -24,9 +23,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        # 👇 FIXED: Added [0] so Python extracts the first dictionary entry out of the list container
         weight_info = measurements[0]
-        
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -38,21 +35,20 @@ def main():
         sys.exit(1)
 
     print("Connecting to Garmin Connect...")
-    token_dir = os.path.join(os.getcwd(), "g_tokens")
+    # 👇 FIXED: Point back to the exact hidden folder name the library expects
+    token_dir = os.path.join(os.getcwd(), ".garminconnect")
     
     target_token_file = os.path.join(token_dir, "garmin.tokens.json")
     if not os.path.exists(target_token_file):
-        print(f"Error: Target token file missing at '{target_token_file}'! Make sure you uploaded it to GitHub.")
+        print(f"Error: Target token file missing at '{target_token_file}'! Make sure you created it on GitHub.")
         sys.exit(1)
 
     try:
-        # Initialize standard parameters
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password
         )
         
-        # Authenticate using the folder layout file we prepared
         print(f"Authenticating via active repository session tokens at: {token_dir}")
         garmin.login(token_dir)
         
