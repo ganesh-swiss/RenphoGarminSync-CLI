@@ -27,7 +27,8 @@ def main():
     user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data timeline
-    https://renpho.com{user_id}/growth_records to https://cloud.renpho.com/api/v3/users/{user_id}/growth_records.json
+    https://cloud.renpho.com/api/v3/users/{user_id}/growth_records.json
+data_url = f"https://cloud.renpho.com/api/v3/users/{user_id}/growth_records.json"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "Renpho/2.0.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
