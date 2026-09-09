@@ -8,7 +8,6 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from datetime import datetime
 from renpho import RenphoClient
-from garminconnect import Garmin
 
 def main():
     parser = argparse.ArgumentParser()
@@ -28,11 +27,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        # 👇 FIXED: Extract the very first entry (index 0) from the list array
-        # This gives Python the actual data dictionary it needs to read the metrics!
         weight_info = measurements[0]
-        
-        # Read the exact metric keys exposed by the community library
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -48,25 +43,27 @@ def main():
     os.makedirs(token_dir, exist_ok=True)
 
     try:
-        # Initialize the Garmin engine cleanly
-        garmin = Garmin(
-            email=args.garmin_email, 
-            password=args.garmin_password
-        )
+        # 👇 FIXED: Import the library safely inside the function 
+        # to block the automatic background pre-login sequence on startup!
+        from garminconnect import Garmin
+        import garth
         
-        # Inject standard desktop browser profile headers to bypass Cloudflare gates
+        # 👇 FIXED: Inject the desktop browser identity into garth's global session 
+        # BEFORE creating the Garmin connection instance.
         browser_user_agent = (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/131.0.0.0 Safari/537.36"
         )
-        
-        if hasattr(garmin, 'garth') and hasattr(garmin.garth, 'sess'):
-            garmin.garth.sess.headers.update({"User-Agent": browser_user_agent})
-        elif hasattr(garmin, 'session') and hasattr(garmin.session, 'headers'):
-            garmin.session.headers.update({"User-Agent": browser_user_agent})
+        garth.client.sess.headers.update({"User-Agent": browser_user_agent})
 
-        # Process automated local session storage logic
+        # Initialize the engine securely under the desktop browser mask
+        garmin = Garmin(
+            email=args.garmin_email, 
+            password=args.garmin_password
+        )
+        
+        # Load or generate environment-specific cloud keys
         print(f"Checking for environment-specific cloud tokens at: {token_dir}")
         garmin.login(token_dir)
         
@@ -86,4 +83,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
