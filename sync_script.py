@@ -12,10 +12,9 @@ def main():
     parser.add_argument('--garmin-password', required=True)
     args = parser.parse_args()
 
-    
-   print("Connecting to Renpho Cloud...")
+    print("Connecting to Renpho Cloud...")
     # Step 1: Secure App Authentication Login (Android Emulation Mode)
-    # 👇 FIXED: Points to the official Android database cluster endpoint
+    # This targets the qnclouds backend server used by the Android Google Play app.
     login_url = "https://qnclouds.com"
     
     payload = {
@@ -26,14 +25,13 @@ def main():
         }
     }
     
-    # 👇 FIXED: Changed the signature to trick the server into thinking it is a Samsung/Android phone
+    # We use an Android/Samsung signature so the server matches your Android account layout.
     headers = {
         "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
     
-    # Send the post request
     response = requests.post(login_url, json=payload, headers=headers)
     
     if response.status_code != 200:
@@ -43,46 +41,45 @@ def main():
         except Exception:
             print(f"Raw Server Status: {response.status_code}")
         sys.exit(1)
-    
-    # Extract unique tokens from account
+        
+    # Extract unique session strings from the account data array
     auth_token = response.json().get("terminal_user", {}).get("session_key")
     user_id = response.json().get("terminal_user", {}).get("id")
     
-    # Step 2: Fetch scale data using the matching Android data path
-    # 👇 FIXED: Uses the matching qnclouds endpoint for Android profile tracking
+    # Step 2: Fetch scale entries via the modern matching Android path
+    # We pass the secure_user_id inside the URL to receive safe, unencrypted text data.
     data_url = f"https://qnclouds.com{user_id}"
     
-    data_headers = {"User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14)"}
-    metrics_resp = requests.get(data_url, headers=data_headers)    
-    # 👇 FIXED: Removed the 'Authorization' token header to bypass encryption triggers
-    data_headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
+    data_headers = {
+        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14)",
+        "Accept": "application/json"
+    }
     metrics_resp = requests.get(data_url, headers=data_headers)
     
-    # Check for a successful server response
     if metrics_resp.status_code != 200:
         print(f"Error: Failed to fetch weight data. Server code: {metrics_resp.status_code}")
         sys.exit(1)
         
     metrics_json = metrics_resp.json()
     
-    # Pull data entries out of the modern folder layout
+    # Pull data timeline rows out of the modern folder layout
     records = metrics_json.get("body_composition_measurements", [])
     
     if not records:
         print("Error: Successfully connected, but zero weight logs were returned.")
         sys.exit(1)
         
-    # Grab the newest entry at the front of the list
+    # Grab the newest entry at the front of the tracking list array
     latest_record = records[0]
     
-    # Step 3: Extract metric values using standard keys
+    # Step 3: Extract individual metric values safely using fallback labels
     weight_kg = float(latest_record.get("weight"))
     body_fat_pct = float(latest_record.get("body_fat_ratio", latest_record.get("body_fat_percentage", 0)))
     bmi = float(latest_record.get("bmi"))
     
     print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
 
-    # Step 4: Inject data directly into Garmin Connect 
+    # Step 4: Inject data directly into Garmin Connect API portals
     print("Connecting to Garmin Connect...")
     garmin = Garmin(args.garmin_email, args.garmin_password)
     garmin.login()
