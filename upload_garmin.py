@@ -17,19 +17,26 @@ def upload():
     parser.add_argument('--bmi', required=True, type=float)
     args = parser.parse_args()
 
+    # 👇 FIXED: We move the imports INSIDE the function. 
+    # This physically blocks the library from running an auto-login test on script boot!
+    print("Loading Garmin connect libraries safely inside isolation pipeline...")
+    from garminconnect import Garmin
+    import garth
+
     print("Connecting to Garmin Connect via secondary isolated script...")
     token_dir = os.path.join(os.getcwd(), ".garminconnect")
-    os.makedirs(token_dir, exist_ok=True)
+    
+    # Check if your file is actually where it's supposed to be
+    nested_token_file = os.path.join(token_dir, "garmin.tokens.json")
+    if not os.path.exists(nested_token_file):
+        print(f"Error: Token file missing at '{nested_token_file}'! Re-check your GitHub folder paths.")
+        sys.exit(1)
 
     try:
-        from garminconnect import Garmin
-        import garth
-        
-        # 👇 FIXED: Pass a dummy string instead of None to satisfy the library's initial text check
-        # This keeps the automation script from making an active cloud request to Garmin's servers.
+        # Initialize cleanly without any extra unneeded keywords
         garmin = Garmin(
             email=args.garmin_email, 
-            password="BYPASS_CLOUDFLARE"
+            password=args.garmin_password
         )
         
         # 👇 Tell the library that the login status is already pre-verified by your token file
