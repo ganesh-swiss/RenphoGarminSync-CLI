@@ -14,7 +14,7 @@ def main():
 
     print("Connecting to Renpho Cloud...")
     # Authentication header handling
-    login_url = "https://cloud.renpho"
+    login_url = "https://renpho.com"
     payload = {"user": {"email": args.renpho_email, "password": args.renpho_password}}
     headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
     
@@ -27,7 +27,7 @@ def main():
     user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data timeline
-    data_url = f"https://cloud.renpho{user_id}/growth_records"
+    data_url = f"https://renpho.com{user_id}/growth_records"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "Renpho/2.0.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
