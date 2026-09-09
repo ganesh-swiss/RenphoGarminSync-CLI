@@ -13,30 +13,34 @@ def main():
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud using renpho-api library...")
+    
     try:
         # Initialize and log into the client
-        client = RenphoClient(email=args.renpho_email, password=args.renpho_password)
-        client.login()  # Required by the library to fetch internal user IDs
+        client = RenphoClient(args.renpho_email, args.renpho_password)
+        client.login()
         
-        # Grab your modern measurements timeline safely
-        weight_info = client.get_latest_measurement()
+        # 👇 FIXED: Use the official package method name to fetch the timeline array
+        measurements = client.get_all_measurements()
         
-        if not weight_info:
-            print("Error: Logged in successfully, but found no recent scale data.")
+        if not measurements:
+            print("Error: Logged in successfully, but found no weight data on this profile.")
             sys.exit(1)
             
-        # Parse health metrics
-        weight_kg = float(weight_info.get("weight"))
-        body_fat_pct = float(weight_info.get("body_fat_ratio", weight_info.get("body_fat_percentage", 0)))
-        bmi = float(weight_info.get("bmi"))
+        # Grab the newest entry at the front of the array list
+        weight_info = measurements[0]
         
-        print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")       
+        # 👇 FIXED: Match the exact variable names used inside the renpho-api database objects
+        weight_kg = float(weight_info.get("weight"))
+        body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
+        bmi = float(weight_info.get("bmi", 0))
+        
+        print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
         
     except Exception as e:
         print(f"Error: Renpho Connection Failed. Reason: {e}")
         sys.exit(1)
 
-    # Step 4: Inject data directly into Garmin Connect API portals
+    # Step 2: Inject data directly into Garmin Connect API portals
     print("Connecting to Garmin Connect...")
     try:
         garmin = Garmin(args.garmin_email, args.garmin_password)
