@@ -25,7 +25,9 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Grab item [0] (the first item in the list) so Python reads the data dictionary properly
+        weight_info = measurements[0]
+        
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -37,7 +39,6 @@ def main():
         sys.exit(1)
 
     print("Connecting to Garmin Connect...")
-    # Define a clean directory for temporary token storage inside the cloud runner
     token_dir = os.path.join(os.getcwd(), "g_tokens")
     os.makedirs(token_dir, exist_ok=True)
     
@@ -50,15 +51,12 @@ def main():
             print(f"Warning: Could not write token file: {token_err}")
 
     try:
-        # 👇 FIXED: Setting verify_login=False stops the library from checking the token's origin
-        # This prevents the library from triggering a fresh, blocked login sequence.
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password, 
             verify_login=False
         )
         
-        # Load the pre-authorized session folder
         print(f"Authenticating via active session folder...")
         garmin.login(token_dir)
         
