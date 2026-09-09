@@ -48,7 +48,7 @@ def main():
     bmi = float(latest_record.get("bmi"))
     
     print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
-Use code with ca
+
     print("Connecting to Garmin Connect...")
     garmin = Garmin(args.garmin_email, args.garmin_password)
     garmin.login()
