@@ -1,9 +1,14 @@
 import sys
 import argparse
 import os
+import warnings
+
+# 👇 FIXED: Silences the 'Garth is deprecated' warning text entirely 
+# so it won't interfere with your incoming data pipeline.
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 from datetime import datetime
 from renpho import RenphoClient
-from garth.exc import GarthException
 from garminconnect import Garmin
 
 def main():
@@ -24,7 +29,13 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Unpacks the modern list container safely 
+        # to ensure Python reads your metrics dictionary properly.
+        if isinstance(measurements, list):
+            weight_info = measurements[0]
+        else:
+            weight_info = measurements
+        
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -39,22 +50,18 @@ def main():
     token_dir = os.path.join(os.getcwd(), ".garminconnect")
     nested_token_file = os.path.join(token_dir, ".garth", "garmin.tokens.json")
     
-    # Structural check to make sure GitHub can see your new folder path
     if not os.path.exists(nested_token_file):
-        print(f"Error: Token file missing at '{nested_token_file}'! Please create the '.garminconnect/.garth/' folder path on GitHub.")
+        print(f"Error: Token file missing at '{nested_token_file}'! Re-check your GitHub folder paths.")
         sys.exit(1)
 
     try:
-        # 👇 FIXED: We load the token path immediately upon creation.
-        # This completely stops the library from trying a standard password login.
-        print(f"Authenticating via active repository session tokens at: {token_dir}")
+        # Pass the token directory right into initialization to bypass Cloudflare web panels
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password,
             tokenstore=token_dir
         )
         
-        # Verify the session is fully active
         garmin.login()
         
         today_str = datetime.now().strftime("%Y-%m-%d")
