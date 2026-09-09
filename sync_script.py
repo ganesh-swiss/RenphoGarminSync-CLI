@@ -52,16 +52,16 @@ def main():
         sys.exit(1)
 
     try:
-        # 👇 FIXED: Changed tokenstore=token_dir to token_dir=token_dir 
-        # to match the exact configuration requirements of the stable library build.
+        # 👇 FIXED: Cleaned initialization argument requirements.
         garmin = Garmin(
             email=args.garmin_email, 
-            password=args.garmin_password,
-            token_dir=token_dir
+            password=args.garmin_password
         )
         
-        # Log in via the local keycard directory to slide past Cloudflare
-        garmin.login()
+        # 👇 FIXED: Passing token_dir here loads your session token keycard.
+        # This safely skips the cloud login panel, dodging Cloudflare entirely!
+        print(f"Authenticating via active repository session tokens at: {token_dir}")
+        garmin.login(token_dir)
         
         today_str = datetime.now().strftime("%Y-%m-%d")
         garmin.add_body_composition(
