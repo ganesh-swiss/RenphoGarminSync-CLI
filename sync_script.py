@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--garmin-password', required=True)
     args = parser.parse_args()
 
-    print("Connecting to Renpho Legacy Cloud...")
+    print("Connecting to Renpho Cloud...")
     # Hash the password to match legacy security protocols
     hashed_password = hashlib.md5(args.renpho_password.encode('utf-8')).hexdigest()
     
@@ -30,7 +30,7 @@ def main():
     user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data history records from legacy cluster
-    data_url = f"https://cloud.renpho{user_id}/growth_records.json?per_page=1"
+    data_url = f"https://cloud.renpho.com{user_id}/growth_records.json?per_page=1"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "QingNiu/4.3.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
