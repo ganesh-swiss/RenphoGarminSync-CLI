@@ -27,7 +27,14 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Access index 0 of the list array container safely 
+        # This isolates the raw data dictionary map so .get() functions work.
+        if isinstance(measurements, list):
+            weight_info = measurements[0]
+        else:
+            weight_info = measurements
+        
+        # Pull data labels used inside the official renpho-api package structures
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -43,12 +50,11 @@ def main():
     os.makedirs(token_dir, exist_ok=True)
 
     try:
-        # 👇 FIXED: Inject cloudscraper to bypass Cloudflare signatures completely!
         import cloudscraper
         from garminconnect import Garmin
         import garth
         
-        # Build an advanced desktop browser profile mask
+        # Build advanced custom browser profiles to shield requests from Cloudflare
         scraper = cloudscraper.create_scraper(
             browser={
                 'browser': 'chrome',
@@ -56,11 +62,9 @@ def main():
                 'desktop': True
             }
         )
-        
-        # Overwrite the global network connection session with our Cloudflare-proof scraper
         garth.client.sess = scraper
         
-        # Initialize the clean engine securely under the network mask
+        # Initialize cleanly under our verified browser identity 
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password
@@ -69,7 +73,7 @@ def main():
         print(f"Checking for environment-specific cloud tokens at: {token_dir}")
         garmin.login(token_dir)
         
-        # Execute health metric injection
+        # Inject the health matrix directly into your connect graph timeline
         today_str = datetime.now().strftime("%Y-%m-%d")
         garmin.add_body_composition(
             timestamp=today_str,
