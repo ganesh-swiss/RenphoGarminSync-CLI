@@ -21,7 +21,7 @@ jobs:
       - name: Install Sync Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests garminconnect renpho-api garth==0.6.3    
+          pip install requests garminconnect renpho-api garth==0.6.3 cloudscraper curl_cffi
           
       - name: Run Cloud Synchronization
         run: |
