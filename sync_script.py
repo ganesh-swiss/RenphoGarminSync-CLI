@@ -14,17 +14,17 @@ def main():
 
     print("Connecting to Renpho Cloud...")
     # Authentication header handling
-    login_url = "https://api.renpho.com/v1/user/login"  # Correct API endpoint
+    login_url = "https://renpho.com"
     payload = {"user": {"email": args.renpho_email, "password": args.renpho_password}}
     headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
     
     response = requests.post(login_url, json=payload, headers=headers)
     if response.status_code != 200:
-        print(f"Error: Renpho Login Failed. Status: {response.status_code}, Response: {response.text}")
+        print("Error: Renpho Login Failed.")
         sys.exit(1)
         
     auth_token = response.json().get("terminal_user", {}).get("session_key")
-    user_id = response.json().get("terminal_user", {}).get("id")    
+    user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data timeline
     data_url = f"https://renpho.com{user_id}/growth_records"
