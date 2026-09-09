@@ -19,25 +19,24 @@ def upload():
 
     print("Connecting to Garmin Connect via secondary isolated script...")
     token_dir = os.path.join(os.getcwd(), ".garminconnect")
-    
-    # Structural check to make sure the token folder path exists
     os.makedirs(token_dir, exist_ok=True)
 
     try:
         from garminconnect import Garmin
         import garth
         
-        # 👇 FIXED: Pass password=None and verify_login=False right into initialization!
-        # This completely strips out the automatic startup login script, 
-        # dropping the 429/403 Cloudflare blocks instantly!
+        # Initialize with password=None to completely kill the background web logins
+        # This safely stops the script from triggering Cloudflare 429/403 blocks!
         garmin = Garmin(
             email=args.garmin_email, 
-            password=None,
-            verify_login=False
+            password=None
         )
         
-        # 👇 FIXED: Instruct Garth's underlying core to pull the locally saved files directly 
-        # without running cross-machine confirmation handshakes.
+        # 👇 FIXED: Tell the library that the login status is pre-verified.
+        # This explicitly stops Garth from verifying the token's cross-machine origin.
+        garmin.is_login_verified = True
+        
+        # Load your local token file directly from the repository directory
         print(f"Loading environment-specific cloud tokens from: {token_dir}")
         garmin.login(token_dir)
         
