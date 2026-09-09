@@ -17,7 +17,7 @@ def main():
     # Hash the password to match legacy security protocols
     hashed_password = hashlib.md5(args.renpho_password.encode('utf-8')).hexdigest()
     
-    login_url = "https://cloud.renpho.com"
+    login_url = "https://renpho.qnclouds.com"
     payload = {"user": {"email": args.renpho_email, "password": hashed_password}}
     headers = {"User-Agent": "QingNiu/4.3.0 (iPhone; iOS 15.0; Scale)"}
     
