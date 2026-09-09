@@ -30,7 +30,7 @@ def main():
     user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data history records from legacy cluster
-    data_url = f"https://cloud.renpho.com{user_id}/growth_records.json?per_page=1"
+    data_url = f"https://cloud.renpho{user_id}/growth_records.json?per_page=1"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "QingNiu/4.3.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
