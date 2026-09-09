@@ -12,7 +12,6 @@ def main():
     parser.add_argument('--renpho-password', required=True)
     parser.add_argument('--garmin-email', required=True)
     parser.add_argument('--garmin-password', required=True)
-    # 👇 NEW: Accepts the text token right from GitHub secrets
     parser.add_argument('--garmin-tokens', required=False, default="")
     args = parser.parse_args()
 
@@ -26,7 +25,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements[0]
+        weight_info = measurements
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -42,18 +41,22 @@ def main():
     token_dir = os.path.join(os.getcwd(), "g_tokens")
     os.makedirs(token_dir, exist_ok=True)
     
-    # 👇 NEW: If a token secret is provided, write it directly to the session file
     if args.garmin_tokens:
         print("Pre-loading Garmin session token keycard from GitHub Secrets...")
         try:
-            # Recreate the file Garmin expects using your text secret
             with open(os.path.join(token_dir, "session.json"), "w") as f:
                 f.write(args.garmin_tokens)
         except Exception as token_err:
             print(f"Warning: Could not write token file: {token_err}")
 
     try:
-        garmin = Garmin(args.garmin_email, args.garmin_password)
+        # 👇 FIXED: Setting verify_login=False stops the library from checking the token's origin
+        # This prevents the library from triggering a fresh, blocked login sequence.
+        garmin = Garmin(
+            email=args.garmin_email, 
+            password=args.garmin_password, 
+            verify_login=False
+        )
         
         # Load the pre-authorized session folder
         print(f"Authenticating via active session folder...")
