@@ -25,15 +25,14 @@ def upload():
         from garminconnect import Garmin
         import garth
         
-        # Initialize with password=None to completely kill the background web logins
-        # This safely stops the script from triggering Cloudflare 429/403 blocks!
+        # 👇 FIXED: Pass a dummy string instead of None to satisfy the library's initial text check
+        # This keeps the automation script from making an active cloud request to Garmin's servers.
         garmin = Garmin(
             email=args.garmin_email, 
-            password=None
+            password="BYPASS_CLOUDFLARE"
         )
         
-        # 👇 FIXED: Tell the library that the login status is pre-verified.
-        # This explicitly stops Garth from verifying the token's cross-machine origin.
+        # 👇 Tell the library that the login status is already pre-verified by your token file
         garmin.is_login_verified = True
         
         # Load your local token file directly from the repository directory
