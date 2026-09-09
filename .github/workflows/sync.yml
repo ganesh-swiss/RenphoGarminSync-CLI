@@ -22,7 +22,6 @@ jobs:
     if [ -z "${{ secrets.RENPHO_EMAIL }}" ] || [ -z "${{ secrets.RENPHO_PASSWORD }}" ]; then
       echo "Error: RENPHO_EMAIL or RENPHO_PASSWORD secrets are not configured"
       exit 1
-    fi
 
       - name: Install Sync Dependencies
         run: |
