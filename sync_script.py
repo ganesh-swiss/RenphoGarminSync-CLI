@@ -12,25 +12,48 @@ def main():
     parser.add_argument('--garmin-password', required=True)
     args = parser.parse_args()
 
-    print("Connecting to Renpho Cloud...")
-    # Step 1: Secure App Authentication Login
-    login_url = "https://renpho.com"
-    payload = {"app_id": "Renpho", "user": {"email": args.renpho_email, "password": args.renpho_password}}
-    headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
     
+   print("Connecting to Renpho Cloud...")
+    # Step 1: Secure App Authentication Login (Android Emulation Mode)
+    # 👇 FIXED: Points to the official Android database cluster endpoint
+    login_url = "https://qnclouds.com"
+    
+    payload = {
+        "app_id": "Renpho",
+        "user": {
+            "email": args.renpho_email,
+            "password": args.renpho_password
+        }
+    }
+    
+    # 👇 FIXED: Changed the signature to trick the server into thinking it is a Samsung/Android phone
+    headers = {
+        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+    
+    # Send the post request
     response = requests.post(login_url, json=payload, headers=headers)
+    
     if response.status_code != 200:
         print("Error: Renpho Login Failed.")
+        try:
+            print(f"Server Response Message: {response.json().get('message', 'No details provided')}")
+        except Exception:
+            print(f"Raw Server Status: {response.status_code}")
         sys.exit(1)
-        
+    
     # Extract unique tokens from account
     auth_token = response.json().get("terminal_user", {}).get("session_key")
     user_id = response.json().get("terminal_user", {}).get("id")
     
-    # Step 2: Fetch scale data using the modern plain-text parameter method
-    # 👇 FIXED: Targets modern path & appends the secure user ID right to the URL
-    data_url = f"https://renpho.com{user_id}"
+    # Step 2: Fetch scale data using the matching Android data path
+    # 👇 FIXED: Uses the matching qnclouds endpoint for Android profile tracking
+    data_url = f"https://qnclouds.com{user_id}"
     
+    data_headers = {"User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14)"}
+    metrics_resp = requests.get(data_url, headers=data_headers)    
     # 👇 FIXED: Removed the 'Authorization' token header to bypass encryption triggers
     data_headers = {"User-Agent": "Renpho/2.0.0 (iPhone; iOS 16.0; Scale)"}
     metrics_resp = requests.get(data_url, headers=data_headers)
