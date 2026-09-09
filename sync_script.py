@@ -25,7 +25,6 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        # 👇 FIXED: Grab item [0] (the first item in the list) so Python reads the data dictionary properly
         weight_info = measurements[0]
         
         weight_kg = float(weight_info.get("weight"))
@@ -51,10 +50,12 @@ def main():
             print(f"Warning: Could not write token file: {token_err}")
 
     try:
+        # 👇 FIXED: Changed verify_login=False to is_login_verified=False 
+        # This matches the exact parameter label expected by the garminconnect library.
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password, 
-            verify_login=False
+            is_login_verified=False
         )
         
         print(f"Authenticating via active session folder...")
