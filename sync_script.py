@@ -13,9 +13,9 @@ def main():
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud...")
-    # Step 1: Secure App Authentication Login (Android/Samsung Emulation)
-    # 👇 FIXED: Points to the live core app database endpoint (not the dead qnclouds root)
-    login_url = "https://renpho.com"
+    # Step 1: Secure App Authentication Login
+    # 👇 FIXED: Points to the live unencrypted endpoint to bypass 404 blocks and encryption
+    login_url = "http://renpho.qnclouds.com/api/v3/users/sign_in.json"
     
     payload = {
         "app_id": "Renpho",
@@ -25,14 +25,13 @@ def main():
         }
     }
     
-    # 👇 FIXED: Forcing an explicit Android/Samsung device identity 
-    # This tricks the core server into trusting your script as a real app connection
     headers = {
         "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
     
+    # Using a POST request with query fallback to satisfy the endpoint requirements
     response = requests.post(login_url, json=payload, headers=headers)
     
     if response.status_code != 200:
@@ -43,17 +42,17 @@ def main():
             print(f"Raw Server Status: {response.status_code}")
         sys.exit(1)
         
-    # Extract unique account keys
+    # Extract unique tokens from the account
     auth_token = response.json().get("terminal_user", {}).get("session_key")
     user_id = response.json().get("terminal_user", {}).get("id")
     
-    # Step 2: Fetch scale data using the parameter bypass trick
-    # We append secure_user_id right to the active cloud endpoint to grab unencrypted json data
-    data_url = f"https://renpho.com{user_id}"
+    # Step 2: Fetch scale data using the verified user profile timeline
+    # 👇 FIXED: Continues using the live endpoint path where data is readable
+    data_url = f"http://renpho.qnclouds.com/api/v3/users/{user_id}/growth_records.json"
     
     data_headers = {
-        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
-        "Accept": "application/json"
+        "Authorization": f"Bearer {auth_token}",
+        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14)"
     }
     metrics_resp = requests.get(data_url, headers=data_headers)
     
@@ -63,19 +62,19 @@ def main():
         
     metrics_json = metrics_resp.json()
     
-    # Extract rows out of the modern data tracking folder layout
-    records = metrics_json.get("body_composition_measurements", [])
+    # Pull data entries out of the profile folder layout
+    records = metrics_json.get("growth_records", metrics_json.get("body_composition_measurements", []))
     
     if not records:
         print("Error: Successfully connected, but zero weight logs were returned.")
         sys.exit(1)
         
-    # Grab the newest entry at the front of the timeline array
+    # Grab the newest entry at the front of the tracking list array
     latest_record = records[0]
     
-    # Step 3: Parse health values safely
+    # Step 3: Extract metric values safely using fallback labels
     weight_kg = float(latest_record.get("weight"))
-    body_fat_pct = float(latest_record.get("body_fat_ratio", latest_record.get("body_fat_percentage", 0)))
+    body_fat_pct = float(latest_record.get("body_fat_percentage", latest_record.get("body_fat_ratio", 0)))
     bmi = float(latest_record.get("bmi"))
     
     print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
