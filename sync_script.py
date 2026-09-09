@@ -1,7 +1,6 @@
 import sys
 import argparse
 import os
-import json
 from datetime import datetime
 from renpho import RenphoClient
 from garminconnect import Garmin
@@ -12,7 +11,6 @@ def main():
     parser.add_argument('--renpho-password', required=True)
     parser.add_argument('--garmin-email', required=True)
     parser.add_argument('--garmin-password', required=True)
-    parser.add_argument('--garmin-tokens', required=False, default="")
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud using renpho-api library...")
@@ -25,9 +23,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        # 👇 FIXED: Added [0] so Python targets the newest dictionary entry inside the list array
-        weight_info = measurements[0]
-        
+        weight_info = measurements
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -39,26 +35,25 @@ def main():
         sys.exit(1)
 
     print("Connecting to Garmin Connect...")
+    # 👇 POINTS DIRECTLY TO YOUR UPLOADED REPOSITORY FOLDER
     token_dir = os.path.join(os.getcwd(), "g_tokens")
-    os.makedirs(token_dir, exist_ok=True)
     
-    if args.garmin_tokens:
-        print("Pre-loading Garmin session token keycard from GitHub Secrets...")
-        try:
-            with open(os.path.join(token_dir, "session.json"), "w") as f:
-                f.write(args.garmin_tokens)
-        except Exception as token_err:
-            print(f"Warning: Could not write token file: {token_err}")
+    # Verification check to make sure GitHub can see your uploaded file
+    target_token_file = os.path.join(token_dir, "garmin.tokens.json")
+    if not os.path.exists(target_token_file):
+        print(f"Error: Target token file missing at '{target_token_file}'! Make sure you uploaded it to GitHub.")
+        sys.exit(1)
 
     try:
-        # Standard clean login initiation 
+        # Initialize standard parameters
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password
         )
         
-        # Authenticate safely using your secret keycard folder
-        print(f"Authenticating via active session folder...")
+        # 👇 The library reads the pre-loaded file directly.
+        # This skips the cloud login window, sneaking your script completely past Cloudflare!
+        print(f"Authenticating via active repository session tokens at: {token_dir}")
         garmin.login(token_dir)
         
         today_str = datetime.now().strftime("%Y-%m-%d")
