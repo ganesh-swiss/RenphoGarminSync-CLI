@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+import json
 from datetime import datetime
 from renpho import RenphoClient
 from garminconnect import Garmin
@@ -11,6 +12,8 @@ def main():
     parser.add_argument('--renpho-password', required=True)
     parser.add_argument('--garmin-email', required=True)
     parser.add_argument('--garmin-password', required=True)
+    # 👇 NEW: Accepts the text token right from GitHub secrets
+    parser.add_argument('--garmin-tokens', required=False, default="")
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud using renpho-api library...")
@@ -34,22 +37,26 @@ def main():
         print(f"Error: Renpho Connection Failed. Reason: {e}")
         sys.exit(1)
 
-    # Step 2: Inject data directly into Garmin Connect with Token Caching
     print("Connecting to Garmin Connect...")
-    # Define a path within your GitHub project folder to store tokens safely
-    token_dir = os.path.join(os.getcwd(), ".garminconnect")
+    # Define a clean directory for temporary token storage inside the cloud runner
+    token_dir = os.path.join(os.getcwd(), "g_tokens")
     os.makedirs(token_dir, exist_ok=True)
     
+    # 👇 NEW: If a token secret is provided, write it directly to the session file
+    if args.garmin_tokens:
+        print("Pre-loading Garmin session token keycard from GitHub Secrets...")
+        try:
+            # Recreate the file Garmin expects using your text secret
+            with open(os.path.join(token_dir, "session.json"), "w") as f:
+                f.write(args.garmin_tokens)
+        except Exception as token_err:
+            print(f"Warning: Could not write token file: {token_err}")
+
     try:
-        # 👇 FIXED: Instructs Garmin library to handle Multi-Factor prompts if running locally
-        garmin = Garmin(
-            args.garmin_email, 
-            args.garmin_password,
-            prompt_mfa=lambda: input("Garmin MFA required. Check your text/email and type code here: ")
-        )
+        garmin = Garmin(args.garmin_email, args.garmin_password)
         
-        # 👇 FIXED: Try loading existing security tokens first to bypass 429 locks completely
-        print(f"Attempting to pass validation via token directory: {token_dir}")
+        # Load the pre-authorized session folder
+        print(f"Authenticating via active session folder...")
         garmin.login(token_dir)
         
         today_str = datetime.now().strftime("%Y-%m-%d")
