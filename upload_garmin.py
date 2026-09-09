@@ -35,16 +35,18 @@ def upload():
             }
         )
         
-        # 👇 FIXED: Overwrite the correct session instance used by the stable garth module framework
+        # Overwrite the global network connection session with our cloudscraper instance
         garth.sess = scraper
         
-        # 👇 FIXED: Added is_login_verified=False to prevent the library from checking the token's machine origin
+        # 👇 FIXED: Removed the invalid keyword argument completely!
+        # Standard clean parameters to initialize the setup safely.
         garmin = Garmin(
             email=args.garmin_email, 
-            password=args.garmin_password,
-            is_login_verified=False
+            password=args.garmin_password
         )
         
+        # 👇 Passing token_dir here loads your local cloud session data instantly.
+        # This completely skips the login screens, bypassing Cloudflare's blocks!
         print(f"Checking for environment-specific cloud tokens at: {token_dir}")
         garmin.login(token_dir)
         
