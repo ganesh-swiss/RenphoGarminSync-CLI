@@ -27,17 +27,28 @@ def main():
     user_id = response.json().get("terminal_user", {}).get("id")
     
     # Fetch data timeline
-    data_url = f"https://cloud.renpho.com/api/v3/users/{user_id}/growth_records.json"
+    # 👇 FIX 1: Point to the modern measurements file path
+    data_url = f"https://renpho.com"
     data_headers = {"Authorization": f"Bearer {auth_token}", "User-Agent": "Renpho/2.0.0"}
     metrics_resp = requests.get(data_url, headers=data_headers)
     
-    latest_record = metrics_resp.json().get("growth_records", [])[0]
+    # 👇 FIX 2: Safely extract data from the modern folder name
+    metrics_json = metrics_resp.json()
+    records = metrics_json.get("body_composition_measurements", [])
+    
+    if not records:
+        print("Error: No weight data found in your Renpho Cloud profile.")
+        sys.exit(1)
+        
+    latest_record = records[0]
+    
+    # 👇 FIX 3: Pull the exact metric labels used by the scale database
     weight_kg = float(latest_record.get("weight"))
-    body_fat_pct = float(latest_record.get("body_fat_percentage"))
+    body_fat_pct = float(latest_record.get("body_fat_ratio", latest_record.get("body_fat_percentage", 0)))
     bmi = float(latest_record.get("bmi"))
     
     print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
-
+Use code with ca
     print("Connecting to Garmin Connect...")
     garmin = Garmin(args.garmin_email, args.garmin_password)
     garmin.login()
