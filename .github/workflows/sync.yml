@@ -24,4 +24,4 @@ jobs:
 
       - name: Run Cloud Synchronization
         run: |
-           python sync_script.py --renpho-email "ganesh.sundaram@yahoo.com" --renpho-password "B0urnessa1nt" --garmin-email "ganesh.sundaram@yahoo.com" --garmin-password "TamanSeras1"
+          python sync_script.py --renpho-email "${{ secrets.RENPHO_EMAIL }}" --renpho-password "${{ secrets.RENPHO_PASSWORD }}" --garmin-email "${{ secrets.GARMIN_EMAIL }}" --garmin-password "${{ secrets.GARMIN_PASSWORD }}"
