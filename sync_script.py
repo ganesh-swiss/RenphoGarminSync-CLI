@@ -3,6 +3,7 @@ import argparse
 import os
 from datetime import datetime
 from renpho import RenphoClient
+from garth.exc import GarthException
 from garminconnect import Garmin
 
 def main():
@@ -23,7 +24,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements[0]
+        weight_info = measurements
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -35,22 +36,26 @@ def main():
         sys.exit(1)
 
     print("Connecting to Garmin Connect...")
-    # 👇 FIXED: Point back to the exact hidden folder name the library expects
     token_dir = os.path.join(os.getcwd(), ".garminconnect")
+    nested_token_file = os.path.join(token_dir, ".garth", "garmin.tokens.json")
     
-    target_token_file = os.path.join(token_dir, "garmin.tokens.json")
-    if not os.path.exists(target_token_file):
-        print(f"Error: Target token file missing at '{target_token_file}'! Make sure you created it on GitHub.")
+    # Structural check to make sure GitHub can see your new folder path
+    if not os.path.exists(nested_token_file):
+        print(f"Error: Token file missing at '{nested_token_file}'! Please create the '.garminconnect/.garth/' folder path on GitHub.")
         sys.exit(1)
 
     try:
+        # 👇 FIXED: We load the token path immediately upon creation.
+        # This completely stops the library from trying a standard password login.
+        print(f"Authenticating via active repository session tokens at: {token_dir}")
         garmin = Garmin(
             email=args.garmin_email, 
-            password=args.garmin_password
+            password=args.garmin_password,
+            tokenstore=token_dir
         )
         
-        print(f"Authenticating via active repository session tokens at: {token_dir}")
-        garmin.login(token_dir)
+        # Verify the session is fully active
+        garmin.login()
         
         today_str = datetime.now().strftime("%Y-%m-%d")
         garmin.add_body_composition(
