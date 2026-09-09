@@ -13,9 +13,9 @@ def main():
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud...")
-    # Step 1: Secure App Authentication Login (Android Emulation Mode)
-    # This targets the qnclouds backend server used by the Android Google Play app.
-    login_url = "https://qnclouds.com"
+    # Step 1: Secure App Authentication Login (Android/Samsung Emulation)
+    # 👇 FIXED: Points to the live core app database endpoint (not the dead qnclouds root)
+    login_url = "https://renpho.com"
     
     payload = {
         "app_id": "Renpho",
@@ -25,7 +25,8 @@ def main():
         }
     }
     
-    # We use an Android/Samsung signature so the server matches your Android account layout.
+    # 👇 FIXED: Forcing an explicit Android/Samsung device identity 
+    # This tricks the core server into trusting your script as a real app connection
     headers = {
         "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
         "Accept": "application/json",
@@ -42,16 +43,16 @@ def main():
             print(f"Raw Server Status: {response.status_code}")
         sys.exit(1)
         
-    # Extract unique session strings from the account data array
+    # Extract unique account keys
     auth_token = response.json().get("terminal_user", {}).get("session_key")
     user_id = response.json().get("terminal_user", {}).get("id")
     
-    # Step 2: Fetch scale entries via the modern matching Android path
-    # We pass the secure_user_id inside the URL to receive safe, unencrypted text data.
-    data_url = f"https://qnclouds.com{user_id}"
+    # Step 2: Fetch scale data using the parameter bypass trick
+    # We append secure_user_id right to the active cloud endpoint to grab unencrypted json data
+    data_url = f"https://renpho.com{user_id}"
     
     data_headers = {
-        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14)",
+        "User-Agent": "RenphoHealth/4.21.0 (Linux; Android 14; SAMSUNG SM-G998B)",
         "Accept": "application/json"
     }
     metrics_resp = requests.get(data_url, headers=data_headers)
@@ -62,17 +63,17 @@ def main():
         
     metrics_json = metrics_resp.json()
     
-    # Pull data timeline rows out of the modern folder layout
+    # Extract rows out of the modern data tracking folder layout
     records = metrics_json.get("body_composition_measurements", [])
     
     if not records:
         print("Error: Successfully connected, but zero weight logs were returned.")
         sys.exit(1)
         
-    # Grab the newest entry at the front of the tracking list array
+    # Grab the newest entry at the front of the timeline array
     latest_record = records[0]
     
-    # Step 3: Extract individual metric values safely using fallback labels
+    # Step 3: Parse health values safely
     weight_kg = float(latest_record.get("weight"))
     body_fat_pct = float(latest_record.get("body_fat_ratio", latest_record.get("body_fat_percentage", 0)))
     bmi = float(latest_record.get("bmi"))
