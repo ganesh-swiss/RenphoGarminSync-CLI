@@ -26,6 +26,3 @@ jobs:
         run: |
           python sync_script.py --renpho-email "${{ secrets.RENPHO_EMAIL }}" --renpho-password "${{ secrets.RENPHO_PASSWORD }}" --garmin-email "${{ secrets.GARMIN_EMAIL }}" --garmin-password "${{ secrets.GARMIN_PASSWORD }}"
 
-  env:
-    # Add this for debugging (remove after verification)
-    DEBUG: 'true'
