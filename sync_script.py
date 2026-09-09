@@ -18,14 +18,19 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Extract the first entry from the list container array
+        if isinstance(measurements, list):
+            weight_info = measurements[0]
+        else:
+            weight_info = measurements
+        
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
         
         print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
         
-        # 👇 Write the data to a temporary file that the next GitHub step can easily read!
+        # Write the data to a temporary file that the next GitHub step can easily read
         with open("metrics.txt", "w") as f:
             f.write(f"{weight_kg},{body_fat_pct},{bmi}")
         print("Renpho metrics saved to workspace.")
