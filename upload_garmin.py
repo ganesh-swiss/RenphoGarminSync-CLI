@@ -35,13 +35,14 @@ def upload():
             }
         )
         
-        # Overwrite the global network connection session with our cloudscraper instance
-        garth.client.sess = scraper
+        # 👇 FIXED: Overwrite the correct session instance used by the stable garth module framework
+        garth.sess = scraper
         
-        # Initialize the clean engine securely under the network mask
+        # 👇 FIXED: Added is_login_verified=False to prevent the library from checking the token's machine origin
         garmin = Garmin(
             email=args.garmin_email, 
-            password=args.garmin_password
+            password=args.garmin_password,
+            is_login_verified=False
         )
         
         print(f"Checking for environment-specific cloud tokens at: {token_dir}")
