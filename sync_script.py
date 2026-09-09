@@ -13,24 +13,24 @@ def main():
     args = parser.parse_args()
 
     print("Connecting to Renpho Cloud using renpho-api library...")
-    
     try:
-        # Initialize the smart community client
+        # Initialize and log into the client
         client = RenphoClient(email=args.renpho_email, password=args.renpho_password)
+        client.login()  # Required by the library to fetch internal user IDs
         
-        # Pull your metrics profile safely (Handles the AES encryption automatically)
+        # Grab your modern measurements timeline safely
         weight_info = client.get_latest_measurement()
         
         if not weight_info:
             print("Error: Logged in successfully, but found no recent scale data.")
             sys.exit(1)
             
-        # Safely extract metrics from the library's data object
+        # Parse health metrics
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("body_fat_ratio", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi"))
         
-        print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")
+        print(f"Latest Renpho Metric: Weight: {weight_kg}kg, Fat: {body_fat_pct}%, BMI: {bmi}")       
         
     except Exception as e:
         print(f"Error: Renpho Connection Failed. Reason: {e}")
