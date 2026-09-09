@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+import json
 from datetime import datetime
 from renpho import RenphoClient
 from garminconnect import Garmin
@@ -23,7 +24,9 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Added [0] so Python extracts the first dictionary entry out of the list container
+        weight_info = measurements[0]
+        
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -35,10 +38,8 @@ def main():
         sys.exit(1)
 
     print("Connecting to Garmin Connect...")
-    # 👇 POINTS DIRECTLY TO YOUR UPLOADED REPOSITORY FOLDER
     token_dir = os.path.join(os.getcwd(), "g_tokens")
     
-    # Verification check to make sure GitHub can see your uploaded file
     target_token_file = os.path.join(token_dir, "garmin.tokens.json")
     if not os.path.exists(target_token_file):
         print(f"Error: Target token file missing at '{target_token_file}'! Make sure you uploaded it to GitHub.")
@@ -51,8 +52,7 @@ def main():
             password=args.garmin_password
         )
         
-        # 👇 The library reads the pre-loaded file directly.
-        # This skips the cloud login window, sneaking your script completely past Cloudflare!
+        # Authenticate using the folder layout file we prepared
         print(f"Authenticating via active repository session tokens at: {token_dir}")
         garmin.login(token_dir)
         
