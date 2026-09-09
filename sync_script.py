@@ -25,7 +25,8 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements
+        # 👇 FIXED: Added [0] so Python targets the newest dictionary entry inside the list array
+        weight_info = measurements[0]
         
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
@@ -50,15 +51,13 @@ def main():
             print(f"Warning: Could not write token file: {token_err}")
 
     try:
-        # 👇 FIXED: Removed the rejected keyword completely.
-        # We just supply the email and password to initialize the setup safely.
+        # Standard clean login initiation 
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password
         )
         
-        # 👇 This is where the magic happens: passing the directory here 
-        # forces the tool to use your pre-validated keycard immediately.
+        # Authenticate safely using your secret keycard folder
         print(f"Authenticating via active session folder...")
         garmin.login(token_dir)
         
