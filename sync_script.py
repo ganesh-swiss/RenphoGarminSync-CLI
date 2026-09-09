@@ -27,7 +27,7 @@ def main():
             print("Error: Logged in successfully, but found no weight data.")
             sys.exit(1)
             
-        weight_info = measurements[0]
+        weight_info = measurements
         weight_kg = float(weight_info.get("weight"))
         body_fat_pct = float(weight_info.get("bodyfat", weight_info.get("body_fat_percentage", 0)))
         bmi = float(weight_info.get("bmi", 0))
@@ -43,27 +43,29 @@ def main():
     os.makedirs(token_dir, exist_ok=True)
 
     try:
-        # 👇 FIXED: Import the library safely inside the function 
-        # to block the automatic background pre-login sequence on startup!
+        # 👇 FIXED: Inject cloudscraper to bypass Cloudflare signatures completely!
+        import cloudscraper
         from garminconnect import Garmin
         import garth
         
-        # 👇 FIXED: Inject the desktop browser identity into garth's global session 
-        # BEFORE creating the Garmin connection instance.
-        browser_user_agent = (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/131.0.0.0 Safari/537.36"
+        # Build an advanced desktop browser profile mask
+        scraper = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
         )
-        garth.client.sess.headers.update({"User-Agent": browser_user_agent})
-
-        # Initialize the engine securely under the desktop browser mask
+        
+        # Overwrite the global network connection session with our Cloudflare-proof scraper
+        garth.client.sess = scraper
+        
+        # Initialize the clean engine securely under the network mask
         garmin = Garmin(
             email=args.garmin_email, 
             password=args.garmin_password
         )
         
-        # Load or generate environment-specific cloud keys
         print(f"Checking for environment-specific cloud tokens at: {token_dir}")
         garmin.login(token_dir)
         
